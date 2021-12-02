@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>MIPS to Bits</title>
+  <meta name="description" content="Converts MIPS instructions into machine code">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="stylesheet" href="css/normalize-min.css">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body class="base-flex" style="justify-content: start;">
+  <span style="width: 100%; height: 5vh;">...</span>
+  <main class="base-flex" style="height: calc(100% - 5vh); width: 100%;">
+    <div id="infiles" class="part base-flex">
+    </div>
+    <div id="main" style="justify-content: start; overflow-y: scroll;" class="part base-flex">
+      <div class="justify-self-center">
+        <label>
+          <input id="input_files" name="source" type="file" accept="text/*" disabled hidden />
+          <button id="btn_files" class="btn" title="Add files" disabled>
+            <svg class="icon">
+              <use href="./svgs/file-import.svg#main"></use>
+            </svg>
+          </button>
+        </label>
+        <select title="Select encoding" id="enc">
+          <option value="16">8&times;Hex</option>
+          <option value="2">32&times;Bin</option>
+        </select>
+        <button id="run_btn" class="btn" title="Convert" disabled>
+          <svg class="icon">
+            <use href="./svgs/play.svg#main"></use>
+          </svg>
+        </button>
+      </div>
+      <ul id="errlist"></ul>
+      <div class="infobox">
+        <h3 style="color: #dbd831;">Considerations</h3>
+        <p>Drag and drop is available</p>
+        <p><em>Adding does not update old file(s)</em>, remove the old file then add the new one</p>
+        <p>Labels may contain any letters, numbers and "_" <em>but must not start with a number</em></p>
+        <p>Floating point and pseudo instructions are not available</p>
+        <p>There is currently no plan to add them (fork 'em)</p>
+        <p>2020 JavaScript required</p>
+      </div>
+      <details>
+        <summary style="color: #3b8dd4;">Instructions</summary>
+        <ul><span>Arithmetic and Logical Instructions</span>
+          <li>add</li>
+          <li>addu</li>
+          <li>addi</li>
+          <li>addiu</li>
+          <li>and</li>
+          <li>andi</li>
+          <li>div</li>
+          <li>divu</li>
+          <li>mult</li>
+          <li>multu</li>
+          <li>nor</li>
+          <li>or</li>
+          <li>ori</li>
+          <li>sll</li>
+          <li>sllv</li>
+          <li>sra</li>
+          <li>srav</li>
+          <li>srl</li>
+          <li>srlv</li>
+          <li>sub</li>
+          <li>subu</li>
+          <li>xor</li>
+          <li>xori</li>
+        </ul>
+        <ul><span>Constant-Manipulating Instructions</span>
+          <li>lhi</li>
+          <li>llo</li>
+        </ul>
+        <ul><span>Comparison Instructions</span>
+          <li>slt</li>
+          <li>sltu</li>
+          <li>slti</li>
+          <li>sltiu</li>
+        </ul>
+        <ul><span>Branch Instructions</span>
+          <li>beq</li>
+          <li>bgtz</li>
+          <li>blez</li>
+          <li>bne</li>
+        </ul>
+        <ul><span>Jump Instructions</span>
+          <li>j</li>
+          <li>jal</li>
+          <li>jalr</li>
+          <li>jr</li>
+        </ul>
+        <ul><span>Load Instructions</span>
+          <li>lb</li>
+          <li>lbu</li>
+          <li>lh</li>
+          <li>lhu</li>
+          <li>lw</li>
+        </ul>
+        <ul><span>Store Instructions</span>
+          <li>sb</li>
+          <li>sh</li>
+          <li>sw</li>
+        </ul>
+        <ul><span>Data Movement Instructions</span>
+          <li>mfhi</li>
+          <li>mflo</li>
+          <li>mthi</li>
+          <li>mtlo</li>
+        </ul>
+        <ul><span>Exception and Interrupt Instructions</span>
+          <li>trap</li>
+        </ul>
+      </details>
+      <details>
+        <summary style="color: orange;">Registers</summary>
+        <ul>
+          <li> $zero </li>
+          <li> $at </li>
+          <li> $v0 </li>
+          <li> $vl </li>
+          <li> $a0 </li>
+          <li> $al </li>
+          <li> $a2 </li>
+          <li> $a3 </li>
+          <li> $t0 </li>
+          <li> $t1 </li>
+          <li> $t2 </li>
+          <li> $t3 </li>
+          <li> $t4 </li>
+          <li> $t5 </li>
+          <li> $t6 </li>
+          <li> $t7 </li>
+          <li> $s0 </li>
+          <li> $sl </li>
+          <li> $s2 </li>
+          <li> $s3 </li>
+          <li> $s4 </li>
+          <li> $s5 </li>
+          <li> $s6 </li>
+          <li> $s7 </li>
+          <li> $t8 </li>
+          <li> $t9 </li>
+          <li> $k0 </li>
+          <li> $k1 </li>
+          <li> $gp </li>
+          <li> $sp </li>
+          <li> $fp </li>
+          <li> $ra </li>
+        </ul>
+      </details>
+    </div>
+    <div id="outfiles" class="part base-flex">
+    </div>
+  </main>
+  <!-- Scripts -->
+  <script type="module" src="js/index.js"></script>
+</body>
+
+</html>
