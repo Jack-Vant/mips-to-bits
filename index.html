@@ -18,7 +18,7 @@
     <div id="infiles" class="part base-flex">
     </div>
     <div id="main" style="justify-content: start; overflow-y: scroll;" class="part base-flex">
-      <div class="justify-self-center">
+      <div style="width: 100%; text-align: center;">
         <label>
           <input id="input_files" name="source" type="file" accept="text/*" disabled hidden />
           <button id="btn_files" class="btn" title="Add files" disabled>
@@ -27,10 +27,13 @@
             </svg>
           </button>
         </label>
-        <select title="Select encoding" id="enc">
-          <option value="16">8&times;Hex</option>
-          <option value="2">32&times;Bin</option>
+        <select title="Size" id="size">
+          <option value="8">8&times;Hex</option>
+          <option value="32">32&times;Bin</option>
         </select>
+        <label title="Zero Fill?">
+          <input type="checkbox" id="zf" /> ZF
+        </label>
         <button id="run_btn" class="btn" title="Convert" disabled>
           <svg class="icon">
             <use href="./svgs/play.svg#main"></use>
@@ -41,10 +44,10 @@
       <div class="infobox">
         <h3 style="color: #dbd831;">Considerations</h3>
         <p>Drag and drop is available</p>
+        <p>Selecting "ZF" adds three Zero Fill lines after every instruction (byte-indexed format)</p>
         <p><em>Adding does not update old file(s)</em>, remove the old file then add the new one</p>
         <p>Labels may contain any letters, numbers and "_" <em>but must not start with a number</em></p>
-        <p>Floating point and pseudo instructions are not available</p>
-        <p>There is currently no plan to add them (fork 'em)</p>
+        <p>Floating point and pseudo instructions are not available and there is currently no plan to add them (fork 'em)</p>
         <p>2020 JavaScript required</p>
       </div>
       <details>
@@ -117,9 +120,12 @@
         <ul><span>Exception and Interrupt Instructions</span>
           <li>trap</li>
         </ul>
+        <ul><span>Other</span>
+          <li>syscall</li>
+        </ul>
       </details>
       <details>
-        <summary style="color: orange;">Registers</summary>
+        <summary style="color: #ecb337;">Registers</summary>
         <ul>
           <li> $zero </li>
           <li> $at </li>
@@ -155,6 +161,7 @@
           <li> $ra </li>
         </ul>
       </details>
+      <span style="width: 100%; margin-bottom: 1rem;"></span>
     </div>
     <div id="outfiles" class="part base-flex">
     </div>

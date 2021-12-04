@@ -21,7 +21,15 @@ body { height: 100%; }
     flex-basis: max(16rem, 33%);
     flex-grow: 1;
     flex-shrink: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #929292 #050505;
 }
+
+.part::-webkit-scrollbar { width: 10px; }
+
+.part::-webkit-scrollbar-track { background-color: #050505; }
+
+.part::-webkit-scrollbar-thumb { background-color: #929292; }
 
 .highlight-1 { background-color: #20c54a; }
 
@@ -87,7 +95,7 @@ ul { list-style-type: none; padding-left: 0; margin-bottom: 0; }
     color: #c41a1a;
     font-size: x-large;
     font-weight: bold;
-    background-color: #080808;
+    background-color: #090909;
     width: 100%;
     display: inline-block;
     text-align: center;

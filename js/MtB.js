@@ -14,25 +14,26 @@ class Unsolved extends Ins {
         this.ic = _ic;
     }
 }
-let machine_code_base;
 let ic;
 let unsolved_list;
 let labels;
+let punch;
 function _toMachineCode(values, sizes) {
     let base10_mc = values[0];
     const len = sizes.length;
     for (let i = 0; i < len; i++)
         base10_mc = ((base10_mc << sizes[i]) | values[i + 1]);
-    return (machine_code_base == 2 ? base10_mc.toString(2).padStart(32, "0") : base10_mc.toString(16).padStart(8, "0")) + "\n";
+    return punch(base10_mc);
 }
 function _regOrErr(s) {
-    const _s = s.substring(1);
+    const _s = s.substring(1).toLowerCase();
     let r = REGISTERS?.[_s];
-    if (r == undefined)
-        r = Number.parseInt(_s);
-    if (isNaN(r) || r < 0 || 32 < r)
-        throw Error(`Bad register "${s}"`);
-    return r;
+    if (r != undefined)
+        return r;
+    r = Number.parseInt(_s);
+    if (0 < r && r < 32)
+        return r;
+    throw Error(`Bad register "${s}"`);
 }
 function _getReg(args) {
     const match = args.match(PATTERNS.REG);
@@ -65,6 +66,9 @@ function _getAddrOrPush(op, args, s) {
     if (addr == undefined)
         unsolved_list.push(new Unsolved(s, op, args, ic));
     return addr;
+}
+function func(func) {
+    return _toMachineCode([func], []);
 }
 function arithLog(func, args) {
     const regs = _getRegList(args, 3);
@@ -181,14 +185,16 @@ const INSTRUCTIONS = {
     "mtlo": new Ins(jumpR, 19),
     // Exception and Interrupt Instructions
     "trap": new Ins(trap, 26),
+    // Syscall
+    "syscall": new Ins(func, 12),
 };
-function convert(srcName, srcText, base) {
+function convert(srcName, srcText, size, allowPartial = false) {
     ic = 0;
-    machine_code_base = base;
     labels = {};
     unsolved_list = [];
     const errorList = [];
     const outLines = [];
+    punch = size == 32 ? (n) => n.toString(2).padStart(32, "0") + "\n" : (n) => n.toString(16).padStart(8, "0") + "\n";
     let i_src = 0;
     const lines = srcText.split(/\r?\n/);
     for (const line of lines) {
@@ -203,7 +209,7 @@ function convert(srcName, srcText, base) {
             labels[lbl] = ic - 1;
             continue;
         }
-        const name = PATTERNS.INSTR.exec(args)?.[1];
+        const name = PATTERNS.INSTR.exec(args)?.[1]?.toLowerCase();
         try {
             if (name) {
                 const ins = INSTRUCTIONS[name];
@@ -217,6 +223,8 @@ function convert(srcName, srcText, base) {
         }
         catch (err) {
             errorList.push(`${srcName} > line ${i_src}: ${err.message} | "${line}"`);
+            if (allowPartial)
+                outLines.push(line);
         }
     }
     for (const ul of unsolved_list) {
@@ -227,8 +235,6 @@ function convert(srcName, srcText, base) {
         ic = ul.ic;
         outLines[ic] = ul.syntax(ul.op_or_func, ul.args);
     }
-    if (errorList.length > 0)
-        throw errorList;
-    return outLines;
+    return { lines: outLines, errors: errorList };
 }
 export { convert, INSTRUCTIONS };

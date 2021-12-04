@@ -72,20 +72,6 @@ btn_files.disabled = false;
 import * as MtB from "./MtB.js";
 const div_outfiles = document.querySelector("div#outfiles");
 const ul_errList = document.querySelector("ul#errlist");
-function appendError(error) {
-    const li = document.createElement("li");
-    li.textContent = error;
-    ul_errList.appendChild(li);
-}
-function handleErrors(err) {
-    if (err instanceof Array)
-        for (const e of err)
-            appendError(e);
-    else if (err instanceof Error)
-        appendError(err.message);
-    else
-        appendError(err);
-}
 let urls = [];
 function appendOutFileElement(cf) {
     const div_bloc = document.createElement("div");
@@ -105,21 +91,39 @@ function appendOutFileElement(cf) {
     div_bloc.appendChild(div_file);
     div_outfiles.appendChild(div_bloc);
 }
+function appendError(error) {
+    const li = document.createElement("li");
+    li.textContent = error;
+    ul_errList.appendChild(li);
+}
+async function convertFile(f, size, zf, zFill) {
+    const result = MtB.convert(f.name, await f.text(), size);
+    if (result.errors.length > 0) {
+        result.errors.forEach(err => appendError(err));
+    }
+    else {
+        let lines = result.lines;
+        if (zf)
+            lines = lines.map(l => l.concat(zFill));
+        const cf = new File(lines, `${f.name.match(/.+(?=\.)/)?.[0]}.txt`, { type: "text/plain" });
+        appendOutFileElement(cf);
+    }
+}
 async function run() {
-    const base = Number.parseInt(document.querySelector("#enc").value);
-    ul_errList.replaceChildren(); // Clear <ul>
+    ul_errList.replaceChildren(); // Clear error list
     div_outfiles.replaceChildren(); // Clear outfiles
-    for (const url of urls)
-        window.URL.revokeObjectURL(url); // Clear urls
+    for (const url of urls) // Clear urls
+        window.URL.revokeObjectURL(url);
     urls = [];
+    const size = Number.parseInt(document.querySelector("#size").value);
+    const zFill = "\n".padStart(size + 1, "0").repeat(3);
+    const zf = document.querySelector("#zf").checked;
     for (const f in files) {
         try {
-            const lines = MtB.convert(files[f].name, await files[f].text(), base);
-            const cf = new File(lines, files[f].name.replace("asm", "txt"), { type: "text/plain" });
-            appendOutFileElement(cf);
+            await convertFile(files[f], size, zf, zFill);
         }
         catch (err) {
-            handleErrors(err);
+            appendError(err);
         }
     }
 }

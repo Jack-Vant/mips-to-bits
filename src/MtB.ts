@@ -1,8 +1,6 @@
 import * as PATTERNS from "./constants/patterns.js";
 import * as FIELD_SIZES from "./constants/field_sizes.js";
-import {
-    REGISTERS
-} from "./constants/registers.js";
+import { REGISTERS } from "./constants/registers.js";
 
 type stx = (op_or_func: number, args: string) => string;
 
@@ -25,46 +23,47 @@ class Unsolved extends Ins {
     }
 }
 
-let machine_code_base: number;
-
 let ic: number;
 
 let unsolved_list: Unsolved[];
 let labels: { [name: string]: number };
 
-function _toMachineCode(values: number[], sizes: number[]): string {
+let punch: (n: number) => string;
+
+function _toMachineCode(values: number[], sizes: number[]) {
     let base10_mc = values[0];
     const len = sizes.length;
     for (let i = 0; i < len; i++)
         base10_mc = ((base10_mc << sizes[i]) | values[i + 1]);
-    return (machine_code_base == 2 ? base10_mc.toString(2).padStart(32, "0") : base10_mc.toString(16).padStart(8, "0")) + "\n";
+    return punch(base10_mc);
 }
 
-function _regOrErr(s: string): number {
-    const _s = s.substring(1);
+function _regOrErr(s: string) {
+    const _s = s.substring(1).toLowerCase();
     let r = REGISTERS?.[_s];
-    if (r == undefined)
-        r = Number.parseInt(_s);
-    if (isNaN(r) || r < 0 || 32 < r)
-        throw Error(`Bad register "${s}"`);
-    return r;
+    if (r != undefined)
+        return r;
+    r = Number.parseInt(_s);
+    if (0 < r && r < 32)
+        return r;
+    throw Error(`Bad register "${s}"`);
 }
 
-function _getReg(args: string): number {
+function _getReg(args: string) {
     const match = args.match(PATTERNS.REG);
     if (match == null)
         throw Error("Missing register parameter");
     return _regOrErr(match[1]);
 }
 
-function _getRegList(args: string, len: number): number[] {
+function _getRegList(args: string, len: number) {
     const matches = args.match(PATTERNS.REG);
     if (matches == null || matches.length < len)
         throw Error("Missing register parameter(s)");
     return matches.map<number>(_regOrErr);
 }
 
-function _getNum(args: string): number {
+function _getNum(args: string) {
     const match = PATTERNS.NUM.exec(args)?.[1];
     if (match)
         return Number(match);
@@ -86,44 +85,48 @@ function _getAddrOrPush(op: number, args: string, s: stx): number | undefined {
     return addr;
 }
 
-function arithLog(func: number, args: string): string {
+function func(func: number) {
+    return _toMachineCode([func], []);
+}
+
+function arithLog(func: number, args: string) {
     const regs = _getRegList(args, 3);
     return _toMachineCode([regs[1], regs[2], regs[0], 0, func], FIELD_SIZES.R);
 }
 
-function divMult(func: number, args: string): string {
+function divMult(func: number, args: string) {
     const regs = _getRegList(args, 2);
     return _toMachineCode([regs[1], regs[0], 0, 0, func], FIELD_SIZES.R);
 }
 
-function shift(func: number, args: string): string {
+function shift(func: number, args: string) {
     const regs = _getRegList(args, 2);
     return _toMachineCode([0, regs[1], regs[0], _getNum(args), func], FIELD_SIZES.R);
 }
 
-function shiftV(func: number, args: string): string {
+function shiftV(func: number, args: string) {
     const regs = _getRegList(args, 3);
     return _toMachineCode([regs[2], regs[1], regs[0], 0, func], FIELD_SIZES.R);
 }
 
-function jumpR(func: number, args: string): string {
+function jumpR(func: number, args: string) {
     return _toMachineCode([_getReg(args), 0, 0, 0, func], FIELD_SIZES.R);
 }
 
-function moveFrom(func: number, args: string): string {
+function moveFrom(func: number, args: string) {
     return _toMachineCode([0, 0, _getReg(args), 0, func], FIELD_SIZES.R);
 }
 
-function arithLogI(op: number, args: string): string {
+function arithLogI(op: number, args: string) {
     const regs = _getRegList(args, 2);
     return _toMachineCode([op, regs[1], regs[0], _getNum(args)], FIELD_SIZES.I);
 }
 
-function loadI(op: number, args: string): string {
+function loadI(op: number, args: string) {
     return _toMachineCode([op, 0, _getReg(args), _getNum(args)], FIELD_SIZES.I);
 }
 
-function branch(op: number, args: string): string {
+function branch(op: number, args: string) {
     const addr = _getAddrOrPush(op, args, branch);
     if (addr == undefined)
         return "unsolved";
@@ -131,26 +134,26 @@ function branch(op: number, args: string): string {
     return _toMachineCode([op, regs[0], regs[1], (addr - ic) & 0xFFFF], FIELD_SIZES.I);
 }
 
-function branchZ(op: number, args: string): string {
+function branchZ(op: number, args: string) {
     const addr = _getAddrOrPush(op, args, branchZ);
     if (addr == undefined)
         return "unsolved";
     return _toMachineCode([op, _getReg(args), 0, (addr - ic) & 0xFFFF], FIELD_SIZES.I);
 }
 
-function loadStore(op: number, args: string): string {
+function loadStore(op: number, args: string) {
     const regs = _getRegList(args, 2);
     return _toMachineCode([op, regs[1], regs[0], _getNum(args)], FIELD_SIZES.I);
 }
 
-function jump(op: number, args: string): string {
+function jump(op: number, args: string) {
     const addr = _getAddrOrPush(op, args, jump);
     if (addr == undefined)
         return "unsolved";
     return _toMachineCode([op, addr], FIELD_SIZES.J);
 }
 
-function trap(op: number, args: string): string {
+function trap(op: number, args: string) {
     return _toMachineCode([op, _getNum(args)], FIELD_SIZES.J);
 }
 
@@ -214,15 +217,17 @@ const INSTRUCTIONS: { [name: string]: Ins } = {
     "mtlo": new Ins(jumpR, 19), // Both are "f $s"
     // Exception and Interrupt Instructions
     "trap": new Ins(trap, 26),
+    // Syscall
+    "syscall": new Ins(func, 12),
 };
 
-function convert(srcName: string, srcText: string, base: number): string[] {
+function convert(srcName: string, srcText: string, size: number, allowPartial = false) {
     ic = 0;
-    machine_code_base = base;
     labels = {};
     unsolved_list = [];
     const errorList: string[] = [];
     const outLines: string[] = [];
+    punch = size == 32 ? (n) => n.toString(2).padStart(32, "0") + "\n" : (n) => n.toString(16).padStart(8, "0") + "\n";
     let i_src = 0;
     const lines = srcText.split(/\r?\n/);
     for (const line of lines) {
@@ -237,7 +242,7 @@ function convert(srcName: string, srcText: string, base: number): string[] {
             labels[lbl] = ic - 1;
             continue;
         }
-        const name = PATTERNS.INSTR.exec(args)?.[1];
+        const name = PATTERNS.INSTR.exec(args)?.[1]?.toLowerCase();
         try {
             if (name) {
                 const ins = INSTRUCTIONS[name];
@@ -249,6 +254,8 @@ function convert(srcName: string, srcText: string, base: number): string[] {
                 throw Error("Bad line");
         } catch (err) {
             errorList.push(`${srcName} > line ${i_src}: ${err.message} | "${line}"`);
+            if (allowPartial)
+                outLines.push(line);
         }
     }
     for (const ul of unsolved_list) {
@@ -259,9 +266,7 @@ function convert(srcName: string, srcText: string, base: number): string[] {
         ic = ul.ic;
         outLines[ic] = ul.syntax(ul.op_or_func, ul.args);
     }
-    if (errorList.length > 0)
-        throw errorList;
-    return outLines;
+    return { lines: outLines, errors: errorList };
 }
 
 export {
